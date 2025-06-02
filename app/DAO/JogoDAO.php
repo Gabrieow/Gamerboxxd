@@ -4,78 +4,82 @@ namespace App\DAO;
 
 use App\Models\Jogo;
 use App\Core\Banco;
-use PDO;
 
     class JogoDAO {
 
         private $conexao;
 
         public function __construct() {
-            $this->conexao = (new Banco())->conectar();
+            $this->conexao = (new Banco())->banco;
         }
 
         public function inserir(Jogo $jogo) {
             $sql = "INSERT INTO jogos (nome, categoria, plataforma, desenvolvedor, data_lancamento, imagem_url, descricao) 
-                    VALUES (:nome, :categoria, :plataforma, :desenvolvedor, :data_lancamento, :imagem_url, :descricao)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+
             $query = $this->conexao->prepare($sql);
-            $query->bindValue(':nome', $jogo->getNome());
-            $query->bindValue(':categoria', $jogo->getCategoria());
-            $query->bindValue(':plataforma', $jogo->getPlataforma());
-            $query->bindValue(':desenvolvedor', $jogo->getDesenvolvedor());
-            $query->bindValue(':data_lancamento', $jogo->getDataLancamento());
-            $query->bindValue(':imagem_url', $jogo->getImagemUrl());
-            $query->bindValue(':descricao', $jogo->getDescricao());
+            $query->bind_param(
+                "sssssss",
+                $jogo->getNome(),
+                $jogo->getCategoria(),
+                $jogo->getPlataforma(),
+                $jogo->getDesenvolvedor(),
+                $jogo->getDataLancamento(),
+                $jogo->getImagemUrl(),
+                $jogo->getDescricao()
+            );
+
             return $query->execute();
         }
 
         public function listarTodos() {
             $sql = "SELECT * FROM jogos ORDER BY nome";
-            $query = $this->conexao->query($sql);
+            $resultado = $this->conexao->query($sql);
 
             $jogos = [];
-            while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
-                $jogos[] = $this->criarJogoDeArray($row);
+            if ($resultado) {
+                while ($row = $resultado->fetch_assoc()) {
+                    $jogos[] = $this->criarJogoDeArray($row);
+                }
             }
 
             return $jogos;
         }
 
         public function buscarPorId($id) {
-            $sql = "SELECT * FROM jogos WHERE id = :id";
+            $sql = "SELECT * FROM jogos WHERE id = ?";
             $query = $this->conexao->prepare($sql);
-            $query->bindValue(':id', $id, PDO::PARAM_INT);
+            $query->bind_param("i", $id);
             $query->execute();
 
-            $row = $query->fetch(PDO::FETCH_ASSOC);
+            $resultado = $query->get_result();
+            $row = $resultado->fetch_assoc();
+
             return $row ? $this->criarJogoDeArray($row) : null;
         }
 
         public function atualizar(Jogo $jogo) {
-            $sql = "UPDATE jogos SET 
-                        nome = :nome, 
-                        categoria = :categoria, 
-                        plataforma = :plataforma, 
-                        desenvolvedor = :desenvolvedor, 
-                        data_lancamento = :data_lancamento, 
-                        imagem_url = :imagem_url, 
-                        descricao = :descricao
-                    WHERE id = :id";
+            $sql = "UPDATE jogos SET nome = ?, categoria = ?, plataforma = ?, desenvolvedor = ?, data_lancamento = ?, imagem_url = ?, descricao = ? WHERE id = ?";
             $query = $this->conexao->prepare($sql);
-            $query->bindValue(':nome', $jogo->getNome());
-            $query->bindValue(':categoria', $jogo->getCategoria());
-            $query->bindValue(':plataforma', $jogo->getPlataforma());
-            $query->bindValue(':desenvolvedor', $jogo->getDesenvolvedor());
-            $query->bindValue(':data_lancamento', $jogo->getDataLancamento());
-            $query->bindValue(':imagem_url', $jogo->getImagemUrl());
-            $query->bindValue(':descricao', $jogo->getDescricao());
-            $query->bindValue(':id', $jogo->getId(), PDO::PARAM_INT);
+            $query->bind_param(
+                "sssssssi",
+                $jogo->getNome(),
+                $jogo->getCategoria(),
+                $jogo->getPlataforma(),
+                $jogo->getDesenvolvedor(),
+                $jogo->getDataLancamento(),
+                $jogo->getImagemUrl(),
+                $jogo->getDescricao(),
+                $jogo->getId()
+            );
+
             return $query->execute();
         }
 
         public function deletar($id) {
-            $sql = "DELETE FROM jogos WHERE id = :id";
+            $sql = "DELETE FROM jogos WHERE id = ?";
             $query = $this->conexao->prepare($sql);
-            $query->bindValue(':id', $id, PDO::PARAM_INT);
+            $query->bind_param("i", $id);
             return $query->execute();
         }
 
