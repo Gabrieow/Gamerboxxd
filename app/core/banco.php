@@ -2,24 +2,23 @@
 
 namespace App\Core;
 
-require_once __DIR__ . '/../config.php';
+use PDO;
+use PDOException;
 
     class Banco {
-        public $banco;
+        private $host = 'localhost';
+        private $dbname = 'gamerboxxd';
+        private $usuario = 'root';
+        private $senha = '';
 
-        private $host = "localhost";
-        private $usuario = "root";
-        private $senha = "";
-        private $nomeBanco = "gamerboxxd";
-
-        public function __construct() {
-            $this->banco = new \mysqli($this->host, $this->usuario, $this->senha, $this->nomeBanco);
-
-            if ($this->banco->connect_error) {
-                die("Erro de conexão: " . $this->banco->connect_error);
+        public function conectar() {
+            try {
+                $conn = new PDO("mysql:host={$this->host};dbname={$this->dbname}", $this->usuario, $this->senha);
+                $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                return $conn;
+            } catch (PDOException $e) {
+                die("Erro na conexão: " . $e->getMessage());
             }
-
-            $this->banco->set_charset("utf8");
         }
     }
 ?>
